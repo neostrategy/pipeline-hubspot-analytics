@@ -1,0 +1,229 @@
+// ============================================================
+// hubspot_analytics — modelo com o contato como hub
+// Colar em https://dbdiagram.io (sintaxe DBML)
+// ============================================================
+
+Project hubspot_analytics {
+  database_type: 'DuckDB'
+  Note: '''
+    Gold do pipeline HubSpot (DuckDB; migração futura para MySQL).
+    Hub: analytics_contacts. Dela derivam entradas/origens,
+    negócios (com histórico de estágio SCD2) e atividades atribuídas.
+  '''
+}
+
+// ------------------------------- HUB -------------------------------
+
+Table analytics_contacts [headercolor: #0F6E56] {
+  contact_id      bigint      [pk, note: 'hs_object_id do HubSpot']
+  email           varchar
+  first_name      varchar
+  last_name       varchar
+  phone           varchar
+  lifecycle_stage varchar     [note: 'lead, mql, sql, opportunity, customer']
+  lead_status     varchar     [note: 'hs_lead_status']
+  owner_id        bigint      [note: 'FK futura -> dim_owners']
+  original_source varchar     [note: 'first-touch — imutável no HubSpot']
+  latest_source   varchar     [note: 'last-touch — sobrescrita a cada interação']
+  latest_source_at timestamp
+  origem_analytics varchar    [note: 'hs_analytics_source']
+  origem_detalhe_1 varchar    [note: 'hs_analytics_source_data_1']
+  origem_detalhe_2 varchar    [note: 'hs_analytics_source_data_2']
+  primeira_url    varchar     [note: 'hs_analytics_first_url — página de entrada']
+  ultima_url      varchar     [note: 'hs_analytics_last_url']
+  criacao_origem_label varchar [note: 'hs_object_source_label — como o registro foi criado']
+  criacao_detalhe_1 varchar   [note: 'hs_object_source_detail_1']
+  criacao_detalhe_2 varchar   [note: 'hs_object_source_detail_2']
+  criacao_detalhe_3 varchar   [note: 'hs_object_source_detail_3']
+  clicou_linkedin_ad varchar  [note: 'hs_clicked_linkedin_ad']
+  gclid           varchar     [note: 'hs_google_click_id — clique de Google Ads']
+  fbclid          varchar     [note: 'hs_facebook_click_id — clique de Meta Ads']
+  utm_source      varchar     [note: 'requer propriedade custom no portal']
+  utm_medium      varchar
+  utm_campaign    varchar
+  utm_content     varchar
+  utm_term        varchar
+  created_at      timestamp   [note: 'entrada do contato']
+  updated_at      timestamp
+  _loaded_at      timestamp   [note: 'metadado do pipeline']
+
+  Note: 'HUB do modelo — 1 linha por contato'
+}
+
+// --------------------------- ENTRADAS ------------------------------
+
+Table mart_entradas [headercolor: #534AB7] {
+  contact_id      bigint      [pk]
+  entrada_em      timestamp   [note: 'created_at do contato']
+  mes_entrada     varchar     [note: 'AAAA-MM para o gráfico de coorte']
+  origem          varchar     [note: 'original_source']
+  origem_detalhe  varchar     [note: 'drill-down da origem (campanha/canal)']
+  is_importacao   boolean     [note: 'true = veio de importação em lote (OFFLINE)']
+  owner_id        bigint
+
+  Note: 'Projeção do hub para o BI: quem entrou, quando e de onde'
+}
+
+// ---------------------------- NEGÓCIOS -----------------------------
+
+Table analytics_deals [headercolor: #534AB7] {
+  deal_id            bigint    [pk]
+  deal_name          varchar
+  pipeline_id        varchar
+  stage_id           varchar   [note: 'estágio ATUAL; histórico na stage_hist']
+  amount             decimal(15,2)
+  owner_id           bigint
+  primary_contact_id bigint    [note: 'desnormalização do contato principal']
+  deal_type          varchar
+  created_at         timestamp
+  updated_at         timestamp
+  close_date         timestamp
+  is_won             boolean   [note: 'derivado do estágio (dim_stages futura)']
+  is_closed          boolean
+  _loaded_at         timestamp
+
+  Note: '1 linha por negócio, snapshot atual'
+}
+
+Table analytics_deal_stage_hist [headercolor: #534AB7] {
+  deal_id        bigint       [note: 'PK composta: deal + estágio + valid_from']
+  pipeline_id    varchar
+  stage_id       varchar
+  valid_from     timestamp    [note: 'entrou no estágio']
+  valid_to       timestamp    [note: 'saiu (null = estágio atual)']
+  is_current     boolean
+  duration_hours decimal(12,2)
+
+  indexes {
+    (deal_id, stage_id, valid_from) [pk]
+  }
+
+  Note: 'SCD2 do dbt snapshot — base do funil. Nunca recriar: histórico irrecuperável'
+}
+
+// --------------------------- ATIVIDADES ----------------------------
+
+Enum engagement_type {
+  CALL
+  MEETING
+}
+
+Table fct_activities [headercolor: #534AB7] {
+  activity_id     bigint          [note: 'PK composta com o tipo (ids podem colidir entre tipos)']
+  engagement_type engagement_type
+  contact_id      bigint          [note: 'via associations_batch (v4); null em meeting só com empresa']
+  deal_id         bigint          [note: 'null = atividade sem negócio (qualificação)']
+  company_id      bigint          [note: 'empresa da atividade (direta ou herdada do contato)']
+  owner_id        bigint
+  title           varchar
+  occurred_at     timestamp
+  outcome         varchar         [note: 'disposition (call) / outcome (meeting)']
+  duration_ms     int             [note: 'só calls']
+  _loaded_at      timestamp
+
+  indexes {
+    (activity_id, engagement_type) [pk]
+  }
+
+  Note: 'Calls + meetings unificados, atribuídos a contato e negócio'
+}
+
+// ---------------------------- EMPRESAS -----------------------------
+
+Table analytics_companies [headercolor: #0F6E56] {
+  company_id  bigint    [pk]
+  name        varchar
+  domain      varchar
+  created_at  timestamp
+  updated_at  timestamp
+  _loaded_at  timestamp
+
+  Note: '1 linha por empresa — alvo de meetings institucionais'
+}
+
+// Tabelas base das atividades (alimentam a fct_activities)
+Table analytics_calls [headercolor: #5F5E5A] {
+  call_id     bigint    [pk]
+  owner_id    bigint
+  direction   varchar
+  disposition varchar
+  status      varchar
+  duration_ms int
+  occurred_at timestamp
+  _loaded_at  timestamp
+}
+
+Table analytics_meetings [headercolor: #5F5E5A] {
+  meeting_id  bigint    [pk]
+  owner_id    bigint
+  outcome     varchar
+  starts_at   timestamp
+  ends_at     timestamp
+  occurred_at timestamp
+  _loaded_at  timestamp
+}
+
+// -------------------------- ASSOCIAÇÕES ----------------------------
+
+Table assoc_deal_contact [headercolor: #5F5E5A] {
+  deal_id    bigint
+  contact_id bigint
+  is_primary boolean [note: 'alimenta primary_contact_id no deal']
+
+  indexes {
+    (deal_id, contact_id) [pk]
+  }
+
+  Note: 'N:N deal <-> contato (um deal tem vários contatos)'
+}
+
+Table assoc_activity_contact [headercolor: #5F5E5A] {
+  activity_id     bigint
+  engagement_type engagement_type
+  contact_id      bigint
+
+  indexes {
+    (activity_id, engagement_type, contact_id) [pk]
+  }
+}
+
+Table assoc_activity_deal [headercolor: #5F5E5A] {
+  activity_id     bigint
+  engagement_type engagement_type
+  deal_id         bigint
+
+  indexes {
+    (activity_id, engagement_type, deal_id) [pk]
+  }
+}
+
+Table assoc_activity_company [headercolor: #5F5E5A] {
+  activity_id     bigint
+  engagement_type engagement_type
+  company_id      bigint
+
+  indexes {
+    (activity_id, engagement_type, company_id) [pk]
+  }
+
+  Note: 'Meetings (e calls) associados direto à empresa'
+}
+
+// --------------------------- RELAÇÕES ------------------------------
+
+Ref: mart_entradas.contact_id - analytics_contacts.contact_id
+Ref: analytics_deals.primary_contact_id > analytics_contacts.contact_id
+Ref: analytics_deal_stage_hist.deal_id > analytics_deals.deal_id
+Ref: fct_activities.contact_id > analytics_contacts.contact_id
+Ref: fct_activities.deal_id > analytics_deals.deal_id
+Ref: assoc_deal_contact.deal_id > analytics_deals.deal_id
+Ref: assoc_deal_contact.contact_id > analytics_contacts.contact_id
+Ref: assoc_activity_contact.contact_id > analytics_contacts.contact_id
+Ref: assoc_activity_deal.deal_id > analytics_deals.deal_id
+Ref: fct_activities.company_id > analytics_companies.company_id
+Ref: assoc_activity_company.company_id > analytics_companies.company_id
+
+// Futuras (não criar ainda): dim_owners (owner_id), dim_stages
+// (pipeline_id + stage_id -> label, ordem, is_won/is_closed),
+// dim_campaigns e fct_touches (dependem de email events + endpoints
+// de owners/pipelines no hubspot-api-service).

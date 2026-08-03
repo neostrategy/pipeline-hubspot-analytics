@@ -1,0 +1,8 @@
+hubspot_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # mesmo padrão do prefect_bo_update: caminho vem do ambiente
+      path: "{{ env_var('DUCKDB_PATH', 'data/analytics.duckdb') }}"
+      threads: 4

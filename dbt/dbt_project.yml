@@ -1,0 +1,21 @@
+name: hubspot_analytics
+version: "1.0.0"
+profile: hubspot_analytics
+
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+
+models:
+  hubspot_analytics:
+    +tags: ["hubspot"]
+    staging:
+      +materialized: view
+      +schema: staging
+    gold:
+      +materialized: incremental
+      +schema: gold
+
+snapshots:
+  hubspot_analytics:
+    +tags: ["hubspot"]
+    +target_schema: snapshots
