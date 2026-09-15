@@ -2,3 +2,6 @@ __pycache__/
 *.duckdb
 *.duckdb-wal
 *.duckdb-shm
+.env
+data/
+.ducklake

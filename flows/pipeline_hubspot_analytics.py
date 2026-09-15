@@ -21,6 +21,7 @@ from persistence.watermarks import WatermarkStore
 from services.associations import AssociationsService
 from services.extraction import ExtractionService
 from services.raw_writer import gravar_raw, gravar_raw_associacoes
+from services.mysql_publisher import publicar_gold
 from services.dbt_runner import rodar_dbt
 
 
@@ -48,6 +49,10 @@ def task_gravar_raw_associacoes(blocos: list[BlocoAssociacoes]):
 def task_rodar_dbt() -> None:
     rodar_dbt()
 
+@task(retries=1, retry_delay_seconds=60)
+def task_publicar_mysql() -> None:
+    publicar_gold()
+
 
 @flow(name="pipeline_hubspot_analytics")
 def pipeline_hubspot_analytics(objetos: list[str] | None = None) -> None:
@@ -65,12 +70,13 @@ def pipeline_hubspot_analytics(objetos: list[str] | None = None) -> None:
         task_gravar_raw(bloco)
         task_gravar_raw_associacoes(task_resolver_associacoes(bloco))
         blocos.append(bloco)
-
+    
     if any(not b.vazio for b in blocos):
         task_rodar_dbt()
+        task_publicar_mysql()
     else:
         log.info("Nenhum registro novo em nenhum objeto — dbt não executado")
-
+    
     for bloco in blocos:
         if bloco.novo_watermark:
             store.set(bloco.object_type, bloco.novo_watermark)
@@ -79,6 +85,7 @@ def pipeline_hubspot_analytics(objetos: list[str] | None = None) -> None:
                 bloco.object_type, bloco.novo_watermark,
                 len(bloco.records), bloco.invocacoes,
             )
+ 
     con.close()
 
 

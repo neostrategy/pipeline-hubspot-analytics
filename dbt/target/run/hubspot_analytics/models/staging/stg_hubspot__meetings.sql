@@ -1,6 +1,6 @@
 
   
-  create view "analytics"."main_staging"."stg_hubspot__meetings__dbt_tmp" as (
+  create view "lake_catalog"."main_staging"."stg_hubspot__meetings__dbt_tmp" as (
     
 
 with raw as (

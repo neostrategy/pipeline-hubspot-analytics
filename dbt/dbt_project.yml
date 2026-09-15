@@ -9,7 +9,7 @@ models:
   hubspot_analytics:
     +tags: ["hubspot"]
     staging:
-      +materialized: view
+      +materialized: table
       +schema: staging
     gold:
       +materialized: incremental

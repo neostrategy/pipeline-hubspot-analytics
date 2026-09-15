@@ -4,7 +4,7 @@
     
 
     create  table
-      "analytics"."main_gold"."fct_activities__dbt_tmp"
+      "lake_catalog"."main_gold"."fct_activities__dbt_tmp"
   
     as (
       
@@ -27,7 +27,7 @@ with atividades as (
         cast(null as timestamp)     as starts_at,
         cast(null as timestamp)     as ends_at,
         _loaded_at
-    from "analytics"."main_gold"."analytics_calls"
+    from "lake_catalog"."main_gold"."analytics_calls"
 
     union all
 
@@ -42,32 +42,32 @@ with atividades as (
         starts_at,
         ends_at,
         _loaded_at
-    from "analytics"."main_gold"."analytics_meetings"
+    from "lake_catalog"."main_gold"."analytics_meetings"
 
 ),
 
 contato as (
     select activity_id, engagement_type, min(contact_id) as contact_id
-    from "analytics"."main_gold"."assoc_activity_contact"
+    from "lake_catalog"."main_gold"."assoc_activity_contact"
     group by 1, 2
 ),
 
 negocio as (
     select activity_id, engagement_type, min(deal_id) as deal_id
-    from "analytics"."main_gold"."assoc_activity_deal"
+    from "lake_catalog"."main_gold"."assoc_activity_deal"
     group by 1, 2
 ),
 
 empresa as (
     select activity_id, engagement_type, min(company_id) as company_id
-    from "analytics"."main_gold"."assoc_activity_company"
+    from "lake_catalog"."main_gold"."assoc_activity_company"
     group by 1, 2
 ),
 
 -- empresa herdada do deal quando a atividade não tem associação direta
 empresa_do_deal as (
     select deal_id, min(company_id) as company_id
-    from "analytics"."main_gold"."assoc_deal_company"
+    from "lake_catalog"."main_gold"."assoc_deal_company"
     group by 1
 )
 

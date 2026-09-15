@@ -6,7 +6,7 @@
 
 with contatos as (
 
-    select * from "analytics"."main_gold"."analytics_contacts"
+    select * from "lake_catalog"."main_gold"."analytics_contacts"
 
 ),
 
@@ -33,7 +33,7 @@ select
     c.created_at                                as entrada_em,
     cast(c.created_at as date)                  as entrada_data,
     strftime(c.created_at, '%Y-%m')             as mes_entrada,
-    strftime(c.created_at, '%Y-W%W')            as semana_entrada,
+    strftime(c.created_at, '%G-W%V')            as semana_entrada,
 
     -- de onde veio (first-touch)
     coalesce(c.original_source, c.origem_analytics, 'DESCONHECIDA') as origem,

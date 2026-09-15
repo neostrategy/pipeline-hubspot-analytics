@@ -1,6 +1,6 @@
 
   
-  create view "analytics"."main_staging"."stg_hubspot__companies__dbt_tmp" as (
+  create view "lake_catalog"."main_staging"."stg_hubspot__companies__dbt_tmp" as (
     
 
 with raw as (
@@ -25,6 +25,10 @@ select
     cast(id as bigint)                          as company_id,
     name                                        as company_name,
     domain,
+    nullif(regexp_replace(cast(cnpj as varchar), '[^0-9A-Za-z]', '', 'g'), '')
+                                                as cnpj,
+    cast(cnpj as varchar)                       as cnpj_original,
+    (length(nullif(regexp_replace(cast(cnpj as varchar), '[^0-9A-Za-z]', '', 'g'), '')) = 14) as cnpj_valido,
     try_cast(hubspot_owner_id as bigint)        as owner_id,
     try_cast(createdate as timestamp)           as created_at,
     try_cast(hs_lastmodifieddate as timestamp)  as updated_at,

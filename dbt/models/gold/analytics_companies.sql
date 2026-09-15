@@ -4,6 +4,7 @@ select
     company_id,
     company_name,
     domain,
+    cnpj,
     owner_id,
     created_at,
     updated_at,

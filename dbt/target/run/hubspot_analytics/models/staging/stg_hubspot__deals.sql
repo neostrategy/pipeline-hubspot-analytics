@@ -1,6 +1,6 @@
 
   
-  create view "analytics"."main_staging"."stg_hubspot__deals__dbt_tmp" as (
+  create view "lake_catalog"."main_staging"."stg_hubspot__deals__dbt_tmp" as (
     
 
 with raw as (
@@ -29,6 +29,10 @@ select
     dealname                                            as deal_name,
     pipeline                                            as pipeline_id,
     dealstage                                           as stage_id,
+    categoria_de_produto_de_interesse as produto_de_interesse,
+    qualificado_para_qual_funil as qualificado_para,
+    direcionado,
+    no_bo,
     try_cast(amount as decimal(15, 2))                  as amount,
     try_cast(hubspot_owner_id as bigint)                    as owner_id,
     dealtype                                            as deal_type,

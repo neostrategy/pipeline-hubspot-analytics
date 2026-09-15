@@ -8,4 +8,4 @@ select
     deal_id,
     pipeline_id,
     stage_id
-from "analytics"."main_staging"."stg_hubspot__deals"
+from "lake_catalog"."main_staging"."stg_hubspot__deals"

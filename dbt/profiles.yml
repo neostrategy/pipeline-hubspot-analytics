@@ -1,8 +1,15 @@
 hubspot_analytics:
-  target: dev
+  target: lake
   outputs:
+
     dev:
       type: duckdb
-      # mesmo padrão do prefect_bo_update: caminho vem do ambiente
       path: "{{ env_var('DUCKDB_PATH', 'data/analytics.duckdb') }}"
       threads: 4
+
+    lake:
+      type: duckdb
+      path: "ducklake:{{ env_var('DUCKLAKE_CATALOG', 'data/lake_catalog.ducklake') }}"
+      extensions:
+        - ducklake
+      threads: 1

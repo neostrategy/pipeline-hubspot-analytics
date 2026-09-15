@@ -6,6 +6,8 @@ select
     first_name,
     last_name,
     phone,
+    cargo,
+    produto_de_interesse,
     lifecycle_stage,
     lead_status,
     owner_id,
@@ -29,6 +31,8 @@ select
     utm_campaign,
     utm_content,
     utm_term,
+    campanha,
+    tipo_de_campanha,
     created_at,
     updated_at,
     _loaded_at

@@ -13,4 +13,4 @@ select
         date_diff('minute', dbt_valid_from,
                   coalesce(dbt_valid_to, now())) / 60.0, 2
     )                                                as duration_hours
-from "analytics"."snapshots"."snap_deals_stage"
+from "lake_catalog"."snapshots"."snap_deals_stage"

@@ -8,7 +8,7 @@ with all_values as (
         engagement_type as value_field,
         count(*) as n_records
 
-    from "analytics"."main_gold"."fct_activities"
+    from "lake_catalog"."main_gold"."fct_activities"
     group by engagement_type
 
 )

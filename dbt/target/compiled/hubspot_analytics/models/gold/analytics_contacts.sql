@@ -6,6 +6,8 @@ select
     first_name,
     last_name,
     phone,
+    cargo,
+    produto_de_interesse,
     lifecycle_stage,
     lead_status,
     owner_id,
@@ -29,10 +31,12 @@ select
     utm_campaign,
     utm_content,
     utm_term,
+    campanha,
+    tipo_de_campanha,
     created_at,
     updated_at,
     _loaded_at
-from "analytics"."main_staging"."stg_hubspot__contacts"
+from "lake_catalog"."main_staging"."stg_hubspot__contacts"
 
 
-where updated_at > (select coalesce(max(updated_at), timestamp '1970-01-01') from "analytics"."main_gold"."analytics_contacts")
+where updated_at > (select coalesce(max(updated_at), timestamp '1970-01-01') from "lake_catalog"."main_gold"."analytics_contacts")

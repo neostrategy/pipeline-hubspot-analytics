@@ -7,4 +7,4 @@ select
     assoc_type,
     coalesce(lower(assoc_type) like '%primary%', false) as is_primary,
     _loaded_at
-from "analytics"."main_staging"."stg_assoc__deals_contacts"
+from "lake_catalog"."main_staging"."stg_assoc__deals_contacts"

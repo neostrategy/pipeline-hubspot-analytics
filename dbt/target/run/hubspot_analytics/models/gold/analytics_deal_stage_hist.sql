@@ -4,7 +4,7 @@
     
 
     create  table
-      "analytics"."main_gold"."analytics_deal_stage_hist__dbt_tmp"
+      "lake_catalog"."main_gold"."analytics_deal_stage_hist__dbt_tmp"
   
     as (
       
@@ -22,7 +22,7 @@ select
         date_diff('minute', dbt_valid_from,
                   coalesce(dbt_valid_to, now())) / 60.0, 2
     )                                                as duration_hours
-from "analytics"."snapshots"."snap_deals_stage"
+from "lake_catalog"."snapshots"."snap_deals_stage"
     );
   
   
