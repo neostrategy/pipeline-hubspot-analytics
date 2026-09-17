@@ -1,0 +1,226 @@
+version: 2
+
+models:
+  - name: stg_hubspot__assoc_deals_contacts
+    description: >
+      Pares de associacao entre deal e contact no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do deal de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do contact de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_deals_companies
+    description: >
+      Pares de associacao entre deal e company no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do deal de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do company de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_calls_contacts
+    description: >
+      Pares de associacao entre call e contact no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do call de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do contact de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_calls_deals
+    description: >
+      Pares de associacao entre call e deal no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do call de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do deal de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_calls_companies
+    description: >
+      Pares de associacao entre call e company no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do call de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do company de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_meetings_contacts
+    description: >
+      Pares de associacao entre meeting e contact no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do meeting de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do contact de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_meetings_deals
+    description: >
+      Pares de associacao entre meeting e deal no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do meeting de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do deal de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]
+
+  - name: stg_hubspot__assoc_meetings_companies
+    description: >
+      Pares de associacao entre meeting e company no HubSpot, com a
+      carga mais recente de cada par.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: from_id
+        data_type: bigint
+        description: "Identificador do meeting de origem"
+        constraints:
+          - type: not_null
+      - name: to_id
+        data_type: bigint
+        description: "Identificador do company de destino"
+        constraints:
+          - type: not_null
+      - name: assoc_type
+        data_type: varchar
+        description: "Rotulo do tipo de associacao definido pelo HubSpot"
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [from_id, to_id]

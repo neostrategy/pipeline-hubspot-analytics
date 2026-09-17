@@ -1,15 +1,13 @@
 hubspot_analytics:
-  target: lake
+  target: prod
   outputs:
 
-    dev:
-      type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', 'data/analytics.duckdb') }}"
+    prod:
+      type: athena
+      s3_staging_dir: "s3://neotass-athena-results-sa-east-1/staging/"
+      s3_data_dir: "s3://neotass-lake-samsung-sa-east-1/lake/"
+      region_name: sa-east-1
+      database: awsdatacatalog
+      schema: samsung_hubspot_stg
+      work_group: primary
       threads: 4
-
-    lake:
-      type: duckdb
-      path: "ducklake:{{ env_var('DUCKLAKE_CATALOG', 'data/lake_catalog.ducklake') }}"
-      extensions:
-        - ducklake
-      threads: 1

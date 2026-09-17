@@ -1,0 +1,215 @@
+version: 2
+
+models:
+  - name: fct_contact_campaign_touches
+    description: >
+      Uma linha por toque de campanha de cada contato. Um toque e uma versao
+      distinta da atribuicao capturada pelo snapshot: sempre que
+      latest_source, campaign_* ou utm_* mudam, nasce um toque novo.
+
+      O historico comeca na data da migracao (setembro de 2026) — o HubSpot
+      sobrescreve esses campos e nao guarda o passado.
+    columns:
+      - name: contact_id
+        data_type: bigint
+        description: "Contato ao qual o toque pertence"
+
+      - name: touch_number
+        data_type: bigint
+        description: "Ordem do toque para o contato. 1 e a entrada."
+
+      - name: campaign_name
+        data_type: varchar
+        description: "Campanha atribuida neste toque"
+
+      - name: campaign_type
+        data_type: varchar
+        description: "Tipo da campanha deste toque"
+
+      - name: previous_campaign_name
+        data_type: varchar
+        description: "Campanha do toque anterior. Nula no primeiro toque."
+
+      - name: latest_source
+        data_type: varchar
+        description: "Canal atribuido neste toque"
+
+      - name: original_source
+        data_type: varchar
+        description: "Canal do primeiro contato, imutavel no HubSpot"
+
+      - name: utm_source
+        data_type: varchar
+        description: "Parametro utm_source deste toque"
+
+      - name: utm_medium
+        data_type: varchar
+        description: "Parametro utm_medium deste toque"
+
+      - name: utm_campaign
+        data_type: varchar
+        description: "Parametro utm_campaign deste toque"
+
+      - name: utm_content
+        data_type: varchar
+        description: "Parametro utm_content deste toque"
+
+      - name: utm_term
+        data_type: varchar
+        description: "Parametro utm_term deste toque"
+
+      - name: touch_started_at
+        data_type: timestamp(6)
+        description: "Inicio da validade deste toque, em UTC"
+
+      - name: touch_ended_at
+        data_type: timestamp(6)
+        description: "Fim da validade. Nulo enquanto o toque for o atual."
+
+      - name: is_current_touch
+        data_type: boolean
+        description: "Este e o toque mais recente do contato"
+
+      - name: is_first_touch
+        data_type: boolean
+        description: "Este e o toque de entrada do contato"
+
+      - name: is_campaign_switch
+        data_type: boolean
+        description: >
+          O contato voltou por uma campanha diferente da anterior. Use para
+          medir retorno em campanha distinta.
+
+  - name: fct_deal_stage_history
+    description: >
+      Uma linha por periodo em que o negocio ficou numa etapa do funil. A
+      duracao da etapa corrente e contada ate o momento da execucao.
+
+      O historico comeca na data da migracao (setembro de 2026).
+    columns:
+      - name: deal_id
+        data_type: bigint
+        description: "Negocio ao qual o periodo pertence"
+
+      - name: pipeline_id
+        data_type: varchar
+        description: "Funil do negocio no periodo"
+
+      - name: deal_stage
+        data_type: varchar
+        description: "Etapa do negocio neste periodo"
+
+      - name: previous_deal_stage
+        data_type: varchar
+        description: "Etapa anterior. Nula no primeiro periodo."
+
+      - name: stage_number
+        data_type: bigint
+        description: "Ordem do periodo para o negocio"
+
+      - name: deal_amount
+        data_type: decimal(18,2)
+        description: "Valor do negocio no periodo"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor responsavel no periodo"
+
+      - name: valid_from
+        data_type: timestamp(6)
+        description: "Inicio do periodo, em UTC"
+
+      - name: valid_to
+        data_type: timestamp(6)
+        description: "Fim do periodo. Nulo enquanto for a etapa atual."
+
+      - name: is_current_stage
+        data_type: boolean
+        description: "Esta e a etapa atual do negocio"
+
+      - name: duration_hours
+        data_type: decimal(12,2)
+        description: >
+          Horas em que o negocio permaneceu na etapa. Para a etapa corrente,
+          contadas ate o momento da execucao do modelo.
+
+  - name: dim_dates
+    description: >
+      Calendario, uma linha por dia de 2020 a 2035. Dimensao transversal:
+      junta-se a qualquer fato por uma coluna de data. Nao depende de
+      nenhuma fonte — e gerada, e reconstruir nao perde nada.
+    columns:
+      - name: date_day
+        data_type: date
+        description: "O dia. Chave de join com os fatos."
+        tests:
+          - unique
+          - not_null
+
+      - name: year_number
+        data_type: bigint
+        description: "Ano do calendario"
+
+      - name: month_number
+        data_type: bigint
+        description: "Mes, de 1 a 12"
+
+      - name: day_number
+        data_type: bigint
+        description: "Dia do mes"
+
+      - name: quarter_number
+        data_type: bigint
+        description: "Trimestre, de 1 a 4"
+
+      - name: weekday_number
+        data_type: bigint
+        description: "Dia da semana, 1 = segunda, 7 = domingo"
+
+      - name: year_month
+        data_type: varchar
+        description: "Rotulo AAAA-MM"
+
+      - name: year_quarter
+        data_type: varchar
+        description: "Rotulo AAAA-Qn"
+
+      - name: year_week
+        data_type: varchar
+        description: >
+          Rotulo AAAA-Www em semana ISO. O ano aqui e o ano da semana, que
+          pode diferir do ano do calendario na virada.
+
+      - name: week_start_date
+        data_type: date
+        description: "Segunda-feira da semana"
+
+      - name: week_end_date
+        data_type: date
+        description: "Domingo da semana"
+
+      - name: month_start_date
+        data_type: date
+        description: "Primeiro dia do mes"
+
+      - name: month_end_date
+        data_type: date
+        description: "Ultimo dia do mes"
+
+      - name: is_weekend
+        data_type: boolean
+        description: "Sabado ou domingo"
+
+      - name: is_weekday
+        data_type: boolean
+        description: "Segunda a sexta. Nao considera feriados."
+
+      - name: is_month_end
+        data_type: boolean
+        description: "Ultimo dia do mes"
+
+      - name: days_from_today
+        data_type: bigint
+        description: >
+          Dias em relacao a hoje: negativo no passado, zero hoje, positivo
+          no futuro. Recalculado a cada execucao do modelo.

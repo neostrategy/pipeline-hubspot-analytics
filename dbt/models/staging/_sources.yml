@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: hubspot_raw
+    database: awsdatacatalog
+    schema: samsung_hubspot_raw
+    description: >
+      JSONL bruto do HubSpot gravado pelo pipeline no S3, particionado por
+      data de carga (dt). Todas as colunas sao string — o cast acontece no
+      staging, onde o contrato valida.
+    tables:
+      - name: contacts
+      - name: companies
+      - name: deals
+      - name: calls
+      - name: meetings
+      - name: assoc_deals_contacts
+      - name: assoc_deals_companies
+      - name: assoc_calls_contacts
+      - name: assoc_calls_deals
+      - name: assoc_calls_companies
+      - name: assoc_meetings_contacts
+      - name: assoc_meetings_deals
+      - name: assoc_meetings_companies

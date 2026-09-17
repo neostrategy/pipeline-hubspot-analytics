@@ -1,41 +1,64 @@
-"""Persistência do raw em JSONL: data/raw/hubspot/<objeto>/<runts>.jsonl.
+"""Persistência do raw em JSONL no S3.
 
-Pasta local pelo mesmo motivo do prefect_bo_update (DLP); ao habilitar S3,
-esta é a única camada que muda.
+Layout: s3://<bucket>/<prefix>/hubspot/<objeto>/dt=<YYYY-MM-DD>/<runts>.jsonl
+
+A partição por data permite que o staging filtre no Athena sem escanear
+o histórico inteiro a cada execução.
 """
 
 from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
+from io import BytesIO
 
-from constants.config import RAW_DIR
+import boto3
+
+from constants.config import AWS_REGION, RAW_BUCKET, RAW_PREFIX
 from domain.schemas import BlocoAssociacoes, BlocoExtraido
 
+_s3 = boto3.client("s3", region_name=AWS_REGION)
 
-def gravar_raw(bloco: BlocoExtraido) -> Path | None:
+
+def _montar_chave(pasta: str, run_dt: datetime) -> str:
+    particao = run_dt.strftime("%Y-%m-%d")
+    run_ts = run_dt.strftime("%Y%m%dT%H%M%SZ")
+    return f"{RAW_PREFIX}/{pasta}/dt={particao}/{run_ts}.jsonl"
+
+
+def _enviar(chave: str, linhas: list[str]) -> str:
+    corpo = BytesIO("\n".join(linhas).encode("utf-8"))
+    _s3.upload_fileobj(corpo, RAW_BUCKET, chave)
+    return f"s3://{RAW_BUCKET}/{chave}"
+
+
+def gravar_raw(bloco: BlocoExtraido) -> str | None:
     if bloco.vazio:
         return None
-    run_ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    destino = RAW_DIR / bloco.object_type / f"{run_ts}.jsonl"
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    with destino.open("w", encoding="utf-8") as f:
-        for r in bloco.records:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    return destino
+
+    agora = datetime.now(timezone.utc)
+    carimbo = agora.isoformat()
+    chave = _montar_chave(bloco.object_type, agora)
+
+    linhas = [
+        json.dumps({**r, "load_ts": carimbo}, ensure_ascii=False)
+        for r in bloco.records
+    ]
+    return _enviar(chave, linhas)
 
 
-def gravar_raw_associacoes(bloco: BlocoAssociacoes) -> Path | None:
-    """Grava os pares em data/raw/hubspot/assoc_<from>_<to>/<runts>.jsonl."""
+def gravar_raw_associacoes(bloco: BlocoAssociacoes) -> str | None:
+    """Grava os pares em hubspot/assoc_<from>_<to>/dt=<data>/<runts>.jsonl."""
     if bloco.vazio:
         return None
-    run_ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+    agora = datetime.now(timezone.utc)
+    carimbo = agora.isoformat()
     pasta = f"assoc_{bloco.from_object}_{bloco.to_object}"
-    destino = RAW_DIR / pasta / f"{run_ts}.jsonl"
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    carimbo = datetime.now(timezone.utc).isoformat()
-    with destino.open("w", encoding="utf-8") as f:
-        for par in bloco.pairs:
-            f.write(json.dumps({**par, "load_ts": carimbo}, ensure_ascii=False) + "\n")
-    return destino
+    chave = _montar_chave(pasta, agora)
+
+    linhas = [
+        json.dumps({**par, "load_ts": carimbo}, ensure_ascii=False)
+        for par in bloco.pairs
+    ]
+    return _enviar(chave, linhas)

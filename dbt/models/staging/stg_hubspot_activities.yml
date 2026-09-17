@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: stg_hubspot__calls
+    description: >
+      Um registro por chamada do HubSpot, deduplicado pela carga mais
+      recente. Camada 1:1 com a fonte.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: call_id
+        data_type: bigint
+        description: "Identificador da chamada no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: call_title
+        data_type: varchar
+        description: "Titulo da chamada"
+
+      - name: call_body
+        data_type: varchar
+        description: "Anotacoes registradas na chamada"
+
+      - name: call_direction
+        data_type: varchar
+        description: "Sentido da chamada (INBOUND ou OUTBOUND)"
+
+      - name: call_status
+        data_type: varchar
+        description: "Status da chamada (COMPLETED, CANCELED...)"
+
+      - name: call_disposition
+        data_type: varchar
+        description: "Resultado da chamada registrado pelo consultor"
+
+      - name: recording_url
+        data_type: varchar
+        description: "URL da gravacao, quando existir"
+
+      - name: call_duration_ms
+        data_type: bigint
+        description: "Duracao da chamada em milissegundos, como vem do HubSpot"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Proprietario da chamada no HubSpot"
+
+      - name: occurred_at
+        data_type: timestamp(6)
+        description: "Momento em que a chamada ocorreu, em UTC"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do registro no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+
+  - name: stg_hubspot__meetings
+    description: >
+      Um registro por reuniao do HubSpot, deduplicado pela carga mais
+      recente. Camada 1:1 com a fonte.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: meeting_id
+        data_type: bigint
+        description: "Identificador da reuniao no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: meeting_title
+        data_type: varchar
+        description: "Titulo da reuniao"
+
+      - name: meeting_body
+        data_type: varchar
+        description: "Anotacoes registradas na reuniao"
+
+      - name: meeting_location
+        data_type: varchar
+        description: "Local ou link da reuniao"
+
+      - name: meeting_outcome
+        data_type: varchar
+        description: "Desfecho da reuniao (SCHEDULED, COMPLETED, NO_SHOW...)"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Proprietario da reuniao no HubSpot"
+
+      - name: started_at
+        data_type: timestamp(6)
+        description: "Inicio da reuniao, em UTC"
+
+      - name: ended_at
+        data_type: timestamp(6)
+        description: "Fim da reuniao, em UTC"
+
+      - name: occurred_at
+        data_type: timestamp(6)
+        description: "Momento de referencia da atividade, em UTC"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do registro no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

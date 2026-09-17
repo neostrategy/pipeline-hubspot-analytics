@@ -1,0 +1,104 @@
+version: 2
+
+models:
+  - name: stg_hubspot__companies
+    description: >
+      Um registro por empresa do HubSpot, deduplicado pela carga mais
+      recente. Camada 1:1 com a fonte — renomeia e tipa, sem regra de
+      negocio e sem join.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: company_id
+        data_type: bigint
+        description: "Identificador da empresa no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: company_name
+        data_type: varchar
+        description: "Razao social ou nome fantasia cadastrado"
+
+      - name: cnpj
+        data_type: varchar
+        description: "CNPJ da empresa, como cadastrado no CRM (sem normalizacao)"
+
+      - name: domain
+        data_type: varchar
+        description: "Dominio principal da empresa"
+
+      - name: website_url
+        data_type: varchar
+        description: "Site da empresa"
+
+      - name: linkedin_url
+        data_type: varchar
+        description: "Pagina da empresa no LinkedIn"
+
+      - name: phone
+        data_type: varchar
+        description: "Telefone principal"
+
+      - name: description
+        data_type: varchar
+        description: "Descricao livre da empresa"
+
+      - name: company_type
+        data_type: varchar
+        description: "Tipo da empresa no CRM (cliente, parceiro, prospect...)"
+
+      - name: industry
+        data_type: varchar
+        description: "Setor de atuacao"
+
+      - name: lifecycle_stage
+        data_type: varchar
+        description: "Estagio da empresa no ciclo de vida do CRM"
+
+      - name: lead_status
+        data_type: varchar
+        description: "Status do lead definido pela operacao"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Proprietario da empresa no HubSpot"
+
+      - name: employees_qty
+        data_type: integer
+        description: "Numero de funcionarios informado"
+
+      - name: annual_revenue_amount
+        data_type: decimal(18,2)
+        description: "Faturamento anual informado"
+
+      - name: city
+        data_type: varchar
+        description: "Cidade"
+
+      - name: state
+        data_type: varchar
+        description: "Estado"
+
+      - name: country
+        data_type: varchar
+        description: "Pais"
+
+      - name: postal_code
+        data_type: varchar
+        description: "CEP"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao da empresa no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

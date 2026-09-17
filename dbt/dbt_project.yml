@@ -4,18 +4,27 @@ profile: hubspot_analytics
 
 model-paths: ["models"]
 snapshot-paths: ["snapshots"]
+macro-paths: ["macros"]
 
 models:
   hubspot_analytics:
     +tags: ["hubspot"]
+
     staging:
-      +materialized: table
-      +schema: staging
-    gold:
+      +schema: samsung_hubspot_stg
       +materialized: incremental
-      +schema: gold
+      +table_type: iceberg
+      +incremental_strategy: merge
+      +on_schema_change: fail
+
+    marts:
+      +schema: samsung_hubspot_mart
+      +materialized: incremental
+      +table_type: iceberg
+      +incremental_strategy: merge
+      +on_schema_change: fail
 
 snapshots:
   hubspot_analytics:
     +tags: ["hubspot"]
-    +target_schema: snapshots
+    +target_schema: samsung_hubspot_stg

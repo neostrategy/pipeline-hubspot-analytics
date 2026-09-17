@@ -1,0 +1,212 @@
+version: 2
+
+models:
+  - name: dim_contacts
+    description: >
+      Um registro por contato do HubSpot, com o estado atual de
+      identificacao, atribuicao de origem e conversao. O historico de
+      campanha vive em fct_contact_campaign_touches — aqui so existe o
+      valor mais recente, porque o HubSpot sobrescreve esses campos.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: contact_id
+        data_type: bigint
+        description: "Identificador do contato no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: email
+        data_type: varchar
+        description: "E-mail principal do contato"
+
+      - name: first_name
+        data_type: varchar
+        description: "Primeiro nome"
+
+      - name: last_name
+        data_type: varchar
+        description: "Sobrenome"
+
+      - name: full_name
+        data_type: varchar
+        description: "Nome completo, concatenado de first_name e last_name"
+
+      - name: phone
+        data_type: varchar
+        description: "Telefone principal"
+
+      - name: mobile_phone
+        data_type: varchar
+        description: "Telefone celular"
+
+      - name: job_title
+        data_type: varchar
+        description: "Cargo informado pelo contato"
+
+      - name: product_interest
+        data_type: varchar
+        description: "Produto de interesse declarado no formulario"
+
+      - name: lifecycle_stage
+        data_type: varchar
+        description: "Estagio do contato no ciclo de vida do CRM"
+
+      - name: lead_status
+        data_type: varchar
+        description: "Status do lead definido pela operacao"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor proprietario do contato no HubSpot"
+
+
+      - name: company_id
+        data_type: bigint
+        description: "Empresa associada ao contato"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: company_id
+
+      - name: original_source
+        data_type: varchar
+        description: "Canal do primeiro contato (first touch). Imutavel no HubSpot."
+
+      - name: original_source_detail_1
+        data_type: varchar
+        description: "Detalhe 1 do canal de primeiro contato"
+
+      - name: original_source_detail_2
+        data_type: varchar
+        description: "Detalhe 2 do canal de primeiro contato"
+
+      - name: latest_source
+        data_type: varchar
+        description: >
+          Canal da interacao mais recente (last touch). Sobrescrito a cada
+          interacao — use fct_contact_campaign_touches para o historico.
+
+      - name: latest_source_at
+        data_type: timestamp(6)
+        description: "Momento do last touch, em UTC"
+
+      - name: first_touch_url
+        data_type: varchar
+        description: "URL da primeira visita atribuida ao contato"
+
+      - name: last_touch_url
+        data_type: varchar
+        description: "URL da ultima visita atribuida ao contato"
+
+      - name: record_source_label
+        data_type: varchar
+        description: "Como o registro foi criado no CRM (FORM, IMPORT, API...)"
+
+      - name: record_source_detail_1
+        data_type: varchar
+        description: "Detalhe 1 da criacao do registro"
+
+      - name: record_source_detail_2
+        data_type: varchar
+        description: "Detalhe 2 da criacao do registro"
+
+      - name: record_source_detail_3
+        data_type: varchar
+        description: "Detalhe 3 da criacao do registro"
+
+      - name: linkedin_ad_click_id
+        data_type: varchar
+        description: "Identificador do clique em anuncio do LinkedIn"
+
+      - name: gclid
+        data_type: varchar
+        description: "Google Click Identifier"
+
+      - name: fbclid
+        data_type: varchar
+        description: "Facebook Click Identifier"
+
+      - name: has_google_ads_click
+        data_type: boolean
+        description: "Contato chegou com gclid preenchido"
+
+      - name: has_meta_ads_click
+        data_type: boolean
+        description: "Contato chegou com fbclid preenchido"
+
+      - name: utm_source
+        data_type: varchar
+        description: "Parametro utm_source da interacao mais recente"
+
+      - name: utm_medium
+        data_type: varchar
+        description: "Parametro utm_medium da interacao mais recente"
+
+      - name: utm_campaign
+        data_type: varchar
+        description: "Parametro utm_campaign da interacao mais recente"
+
+      - name: utm_content
+        data_type: varchar
+        description: "Parametro utm_content da interacao mais recente"
+
+      - name: utm_term
+        data_type: varchar
+        description: "Parametro utm_term da interacao mais recente"
+
+      - name: campaign_name
+        data_type: varchar
+        description: "Campanha atribuida ao contato na interacao mais recente"
+
+      - name: campaign_type
+        data_type: varchar
+        description: "Tipo da campanha da interacao mais recente"
+
+      - name: first_conversion_event_name
+        data_type: varchar
+        description: "Nome do formulario da primeira conversao"
+
+      - name: conversion_events_qty
+        data_type: integer
+        description: "Total de conversoes do contato"
+
+      - name: unique_conversion_events_qty
+        data_type: integer
+        description: "Total de conversoes distintas do contato"
+
+      - name: first_converted_at
+        data_type: timestamp(6)
+        description: "Momento da primeira conversao, em UTC"
+
+      - name: cadastrado_canal_azul
+        data_type: varchar
+        description: "Situacao de cadastro do contato no programa Canal Azul"
+
+      - name: is_bulk_import
+        data_type: boolean
+        description: >
+          Contato provavelmente criado por importacao em lote: 20 ou mais
+          contatos criados no mesmo minuto, ou origem OFFLINE. Filtrar em
+          analise de coorte para nao contar pico artificial.
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do contato no HubSpot, em UTC"
+
+      - name: created_date
+        data_type: date
+        description: "Data de criacao do contato. Chave de join com dim_dates."
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

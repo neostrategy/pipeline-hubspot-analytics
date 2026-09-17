@@ -1,42 +1,69 @@
 """Persistência do cursor incremental por objeto.
 
-Implementação atual em DuckDB (pipeline rodando local). Ao migrar o flow
-para a nuvem, trocar por uma implementação DynamoDB mantendo a mesma
-interface (get / set) — o resto do pipeline não muda.
+Implementação em DynamoDB, mantendo a interface (get / set) da versão
+anterior em DuckDB — o resto do pipeline não muda.
+
+A escrita é condicional: o watermark só avança se o novo valor for maior
+que o gravado. Isso impede que uma execução mais lenta sobrescreva o
+cursor de uma mais recente e faça o pipeline pular registros.
 """
 
 from __future__ import annotations
 
-import duckdb
+import logging
+from datetime import datetime, timezone
+
+import boto3
+from botocore.exceptions import ClientError
+
+from constants.config import AWS_REGION, WATERMARK_PIPELINE, WATERMARK_TABLE
+
+log = logging.getLogger(__name__)
 
 
 class WatermarkStore:
-    def __init__(self, con: duckdb.DuckDBPyConnection):
-        self.con = con
-        self.con.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_watermarks (
-                object_type  VARCHAR PRIMARY KEY,
-                watermark    VARCHAR,          -- ISO 8601 UTC
-                updated_at   TIMESTAMP
-            )
-            """
-        )
+    def __init__(
+        self,
+        table_name: str = WATERMARK_TABLE,
+        pipeline: str = WATERMARK_PIPELINE,
+        region: str = AWS_REGION,
+    ):
+        self.pipeline = pipeline
+        self.table = boto3.resource("dynamodb", region_name=region).Table(table_name)
 
     def get(self, object_type: str) -> str | None:
-        row = self.con.execute(
-            "SELECT watermark FROM meta_watermarks WHERE object_type = ?",
-            [object_type],
-        ).fetchone()
-        return row[0] if row else None
+        resposta = self.table.get_item(
+            Key={"pipeline": self.pipeline, "object_type": object_type},
+            ConsistentRead=True,
+        )
+        item = resposta.get("Item")
+        return item["watermark"] if item else None
 
     def set(self, object_type: str, watermark: str) -> None:
-        self.con.execute(
-            """
-            INSERT INTO meta_watermarks VALUES (?, ?, now())
-            ON CONFLICT (object_type) DO UPDATE
-               SET watermark = excluded.watermark,
-                   updated_at = excluded.updated_at
-            """,
-            [object_type, watermark],
+        try:
+            self.table.put_item(
+                Item={
+                    "pipeline": self.pipeline,
+                    "object_type": object_type,
+                    "watermark": watermark,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+                ConditionExpression=(
+                    "attribute_not_exists(watermark) OR watermark < :novo"
+                ),
+                ExpressionAttributeValues={":novo": watermark},
+            )
+        except ClientError as erro:
+            if erro.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
+            log.warning(
+                "[%s] watermark %s ignorado — o gravado já é mais recente",
+                object_type,
+                watermark,
+            )
+
+    def reset(self, object_type: str) -> None:
+        """Apaga o cursor para forçar carga histórica completa no próximo run."""
+        self.table.delete_item(
+            Key={"pipeline": self.pipeline, "object_type": object_type}
         )

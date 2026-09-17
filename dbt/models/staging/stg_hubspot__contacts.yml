@@ -1,0 +1,180 @@
+version: 2
+
+models:
+  - name: stg_hubspot__contacts
+    description: >
+      Um registro por contato do HubSpot, deduplicado pela carga mais
+      recente. Camada 1:1 com a fonte — renomeia e tipa, sem regra de
+      negocio e sem join.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: contact_id
+        data_type: bigint
+        description: "Identificador do contato no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: email
+        data_type: varchar
+        description: "E-mail principal do contato"
+
+      - name: first_name
+        data_type: varchar
+        description: "Primeiro nome"
+
+      - name: last_name
+        data_type: varchar
+        description: "Sobrenome"
+
+      - name: phone
+        data_type: varchar
+        description: "Telefone principal"
+
+      - name: mobile_phone
+        data_type: varchar
+        description: "Telefone celular"
+
+      - name: job_title
+        data_type: varchar
+        description: "Cargo informado pelo contato"
+
+      - name: product_interest
+        data_type: varchar
+        description: "Produto de interesse declarado no formulario"
+
+      - name: lifecycle_stage
+        data_type: varchar
+        description: "Estagio do contato no ciclo de vida do CRM"
+
+      - name: lead_status
+        data_type: varchar
+        description: "Status do lead definido pela operacao"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Proprietario do contato no HubSpot"
+
+      - name: company_id
+        data_type: bigint
+        description: "Empresa associada ao contato no HubSpot"
+
+      - name: original_source
+        data_type: varchar
+        description: "Canal do primeiro contato (first touch)"
+
+      - name: original_source_detail_1
+        data_type: varchar
+        description: "Detalhe 1 do canal de primeiro contato"
+
+      - name: original_source_detail_2
+        data_type: varchar
+        description: "Detalhe 2 do canal de primeiro contato"
+
+      - name: latest_source
+        data_type: varchar
+        description: "Canal do contato mais recente (last touch)"
+
+      - name: first_touch_url
+        data_type: varchar
+        description: "URL da primeira visita atribuida ao contato"
+
+      - name: last_touch_url
+        data_type: varchar
+        description: "URL da ultima visita atribuida ao contato"
+
+      - name: record_source_label
+        data_type: varchar
+        description: "Como o registro foi criado no CRM (FORM, IMPORT, API...)"
+
+      - name: record_source_detail_1
+        data_type: varchar
+        description: "Detalhe 1 da criacao do registro"
+
+      - name: record_source_detail_2
+        data_type: varchar
+        description: "Detalhe 2 da criacao do registro"
+
+      - name: record_source_detail_3
+        data_type: varchar
+        description: "Detalhe 3 da criacao do registro"
+
+      - name: linkedin_ad_click_id
+        data_type: varchar
+        description: "Identificador do clique em anuncio do LinkedIn"
+
+      - name: gclid
+        data_type: varchar
+        description: "Google Click Identifier"
+
+      - name: fbclid
+        data_type: varchar
+        description: "Facebook Click Identifier"
+
+      - name: utm_source
+        data_type: varchar
+        description: "Parametro utm_source da origem"
+
+      - name: utm_medium
+        data_type: varchar
+        description: "Parametro utm_medium da origem"
+
+      - name: utm_campaign
+        data_type: varchar
+        description: "Parametro utm_campaign da origem"
+
+      - name: utm_content
+        data_type: varchar
+        description: "Parametro utm_content da origem"
+
+      - name: utm_term
+        data_type: varchar
+        description: "Parametro utm_term da origem"
+
+      - name: campaign_name
+        data_type: varchar
+        description: "Campanha atribuida ao contato pela operacao"
+
+      - name: campaign_type
+        data_type: varchar
+        description: "Tipo da campanha atribuida ao contato"
+
+      - name: first_conversion_event_name
+        data_type: varchar
+        description: "Nome do formulario da primeira conversao"
+
+      - name: conversion_events_qty
+        data_type: integer
+        description: "Total de conversoes do contato"
+
+      - name: unique_conversion_events_qty
+        data_type: integer
+        description: "Total de conversoes distintas do contato"
+
+      - name: first_converted_at
+        data_type: timestamp(6)
+        description: "Momento da primeira conversao, em UTC"
+
+      - name: cadastrado_canal_azul
+        data_type: varchar
+        description: "Situacao de cadastro do contato no programa Canal Azul"
+
+      - name: latest_source_at
+        data_type: timestamp(6)
+        description: "Momento do last touch, em UTC"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do contato no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

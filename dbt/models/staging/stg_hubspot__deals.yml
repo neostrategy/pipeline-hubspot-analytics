@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: stg_hubspot__deals
+    description: >
+      Um registro por negocio do HubSpot, deduplicado pela carga mais
+      recente. Camada 1:1 com a fonte — renomeia e tipa, sem regra de
+      negocio e sem join.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: deal_id
+        data_type: bigint
+        description: "Identificador do negocio no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: deal_name
+        data_type: varchar
+        description: "Nome do negocio"
+
+      - name: description
+        data_type: varchar
+        description: "Descricao livre do negocio"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Proprietario do negocio no HubSpot"
+
+      - name: pipeline_id
+        data_type: varchar
+        description: "Funil ao qual o negocio pertence"
+
+      - name: deal_stage
+        data_type: varchar
+        description: "Etapa atual do negocio dentro do funil"
+
+      - name: deal_type
+        data_type: varchar
+        description: "Tipo do negocio (novo, renovacao...)"
+
+      - name: forecast_category
+        data_type: varchar
+        description: "Categoria de previsao atribuida pelo CRM"
+
+      - name: stage_probability_ratio
+        data_type: decimal(9,6)
+        description: "Probabilidade de fechamento da etapa, como fracao de 0 a 1"
+
+      - name: next_step
+        data_type: varchar
+        description: "Proximo passo registrado pelo consultor"
+
+      - name: deal_amount
+        data_type: decimal(18,2)
+        description: "Valor do negocio"
+
+      - name: closed_amount
+        data_type: decimal(18,2)
+        description: "Valor efetivamente fechado"
+
+      - name: projected_amount
+        data_type: decimal(18,2)
+        description: "Valor projetado pelo CRM"
+
+      - name: product_category_interest
+        data_type: varchar
+        description: "Categoria de produto de interesse do negocio"
+
+      - name: no_bo
+        data_type: varchar
+        description: "Campo de negocio da operacao, preservado como na origem"
+
+      - name: direcionado
+        data_type: varchar
+        description: "Campo de negocio da operacao, preservado como na origem"
+
+      - name: qualificado_para_qual_funil
+        data_type: varchar
+        description: "Funil para o qual o negocio foi qualificado"
+
+      - name: closed_at
+        data_type: timestamp(6)
+        description: "Data de fechamento do negocio, em UTC"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do negocio no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

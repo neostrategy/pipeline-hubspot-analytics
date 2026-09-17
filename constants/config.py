@@ -1,22 +1,28 @@
 """Configuração do pipeline — único lugar com valores de ambiente/negócio."""
 
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv()
 
-# --- DuckLake ------------------------------------------------------------
-DUCKLAKE_CATALOG = os.environ.get("DUCKLAKE_CATALOG", "data/lake_catalog.ducklake")
-DUCKLAKE_DATA_PATH = os.environ.get("DUCKLAKE_DATA_PATH", "data/lake_files/")
-DBT_TARGET = os.environ.get("DBT_TARGET", "lake")
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- AWS -----------------------------------------------------------------
 AWS_REGION = "sa-east-1"
 LAMBDA_FUNCTION = "hubspot-api-lambda"
 
-# --- Armazenamento local -------------------------------------------------
-DUCKDB_PATH = os.environ.get("DUCKDB_PATH", "data/analytics.duckdb")
-RAW_DIR = Path(os.environ.get("HUBSPOT_RAW_DIR", "data/raw/hubspot"))
+# --- Lake (S3) -----------------------------------------------------------
+RAW_BUCKET = os.environ.get("RAW_BUCKET", "neotass-lake-samsung-sa-east-1")
+RAW_PREFIX = os.environ.get("RAW_PREFIX", "raw/hubspot")
+
+# --- Glue / Athena -------------------------------------------------------
+GLUE_RAW_DATABASE = os.environ.get("GLUE_RAW_DATABASE", "samsung_hubspot_raw")
+GLUE_STG_DATABASE = os.environ.get("GLUE_STG_DATABASE", "samsung_hubspot_stg")
+GLUE_MART_DATABASE = os.environ.get("GLUE_MART_DATABASE", "samsung_hubspot_mart")
+ATHENA_WORKGROUP = os.environ.get("ATHENA_WORKGROUP", "primary")
+
+# --- Watermark (DynamoDB) ------------------------------------------------
+WATERMARK_TABLE = os.environ.get("WATERMARK_TABLE", "pipeline-watermarks")
+WATERMARK_PIPELINE = "hubspot-analytics"
 
 # --- Objetos e propriedades ----------------------------------------------
 OBJETOS = ["contacts", "companies", "deals", "calls", "meetings"]
@@ -42,33 +48,19 @@ SEARCH_CURSOR_SAFETY = 9_500
 MAX_INVOCACOES = 50
 
 # --- dbt -----------------------------------------------------------------
+DBT_TARGET = os.environ.get("DBT_TARGET", "prod")
 DBT_SELECT = "tag:hubspot"
 DBT_PROJECT_DIR = os.environ.get("DBT_PROJECT_DIR", "dbt")
 
-# --- MySQL (publicação para o BI) ---------------------------------------
-MYSQL_HOST = os.environ.get("MYSQL_HOST", "")
-MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
-MYSQL_USER = os.environ.get("MYSQL_USER", "")
-MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
-MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "")
-
-# Schema das tabelas gold dentro do DuckLake
-GOLD_SCHEMA = os.environ.get("GOLD_SCHEMA", "main_gold")
-
-# Ordem importa: hubs antes dos fatos, para o BI nunca ver um fato
-# apontando para uma dimensão que ainda não foi atualizada.
-GOLD_TABLES = [
-    "analytics_contacts",
-    "analytics_companies",
-    "analytics_deals",
-    "analytics_calls",
-    "analytics_meetings",
-    "analytics_deal_stage_hist",
-    "assoc_deal_contact",
-    "assoc_deal_company",
-    "assoc_activity_contact",
-    "assoc_activity_deal",
-    "assoc_activity_company",
+# --- Manutenção Iceberg --------------------------------------------------
+# Glue Data Catalog não compacta sozinho; rodar OPTIMIZE/VACUUM semanalmente.
+MANUTENCAO_TABELAS = [
+    "dim_contacts",
+    "dim_companies",
+    "dim_deals",
+    "fct_calls",
+    "fct_meetings",
+    "fct_deal_stage_hist",
     "fct_activities",
-    "mart_entradas",
+    "agg_entradas_mensais",
 ]

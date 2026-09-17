@@ -1,0 +1,218 @@
+version: 2
+
+models:
+  - name: fct_calls
+    description: >
+      Uma linha por chamada registrada no HubSpot, com duracao ja convertida
+      para minutos.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: call_id
+        data_type: bigint
+        description: "Identificador da chamada no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor responsavel pela chamada"
+
+      - name: call_title
+        data_type: varchar
+        description: "Titulo da chamada"
+
+      - name: call_direction
+        data_type: varchar
+        description: "Sentido da chamada (INBOUND ou OUTBOUND)"
+
+      - name: call_disposition
+        data_type: varchar
+        description: "Resultado da chamada registrado pelo consultor"
+
+      - name: call_status
+        data_type: varchar
+        description: "Status da chamada (COMPLETED, CANCELED...)"
+
+      - name: call_duration_ms
+        data_type: bigint
+        description: "Duracao em milissegundos, como vem do HubSpot"
+
+      - name: call_duration_minutes
+        data_type: decimal(12,2)
+        description: "Duracao em minutos"
+
+      - name: occurred_at
+        data_type: timestamp(6)
+        description: "Momento em que a chamada ocorreu, em UTC"
+
+      - name: occurred_date
+        data_type: date
+        description: "Data da chamada. Chave de join com dim_dates."
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do registro no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+
+  - name: fct_meetings
+    description: >
+      Uma linha por reuniao registrada no HubSpot, com duracao calculada a
+      partir de inicio e fim.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: meeting_id
+        data_type: bigint
+        description: "Identificador da reuniao no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor responsavel pela reuniao"
+
+      - name: meeting_title
+        data_type: varchar
+        description: "Titulo da reuniao"
+
+      - name: meeting_location
+        data_type: varchar
+        description: "Local ou link da reuniao"
+
+      - name: meeting_outcome
+        data_type: varchar
+        description: "Desfecho da reuniao (SCHEDULED, COMPLETED, NO_SHOW...)"
+
+      - name: started_at
+        data_type: timestamp(6)
+        description: "Inicio da reuniao, em UTC"
+
+      - name: ended_at
+        data_type: timestamp(6)
+        description: "Fim da reuniao, em UTC"
+
+      - name: meeting_duration_minutes
+        data_type: decimal(12,2)
+        description: >
+          Duracao em minutos. Nula quando inicio ou fim nao foram
+          registrados no CRM.
+
+      - name: occurred_at
+        data_type: timestamp(6)
+        description: "Momento de referencia da atividade, em UTC"
+
+      - name: occurred_date
+        data_type: date
+        description: "Data da reuniao. Chave de join com dim_dates."
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do registro no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+
+  - name: fct_activities
+    description: >
+      Chamadas e reunioes unificadas, atribuidas a contato, negocio e
+      empresa. Grao: uma linha por atividade. Quando uma atividade tem mais
+      de um contato ou negocio associado, escolhe-se o menor id — a relacao
+      completa vive nos modelos de staging de associacao.
+    columns:
+      - name: activity_id
+        data_type: bigint
+        description: "Identificador da atividade na origem (call ou meeting)"
+
+      - name: engagement_type
+        data_type: varchar
+        description: "Origem da atividade: CALL ou MEETING"
+        tests:
+          - accepted_values:
+              values: ["CALL", "MEETING"]
+
+      - name: contact_id
+        data_type: bigint
+        description: "Contato associado a atividade"
+
+      - name: deal_id
+        data_type: bigint
+        description: "Negocio associado a atividade"
+
+      - name: company_id
+        data_type: bigint
+        description: >
+          Empresa associada. Quando nao ha associacao direta, herda a
+          empresa do negocio — ver is_company_inherited_from_deal.
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor responsavel pela atividade"
+
+      - name: title
+        data_type: varchar
+        description: "Titulo da chamada ou da reuniao"
+
+      - name: occurred_at
+        data_type: timestamp(6)
+        description: "Momento da atividade, em UTC"
+
+      - name: occurred_date
+        data_type: date
+        description: "Data da atividade. Chave de join com dim_dates."
+
+      - name: outcome
+        data_type: varchar
+        description: "Disposicao da chamada ou desfecho da reuniao"
+
+      - name: duration_ms
+        data_type: bigint
+        description: "Duracao em milissegundos. Nula para reunioes."
+
+      - name: duration_minutes
+        data_type: decimal(12,2)
+        description: "Duracao em minutos. Nula para reunioes."
+
+      - name: started_at
+        data_type: timestamp(6)
+        description: "Inicio da reuniao. Nulo para chamadas."
+
+      - name: ended_at
+        data_type: timestamp(6)
+        description: "Fim da reuniao. Nulo para chamadas."
+
+      - name: is_company_inherited_from_deal
+        data_type: boolean
+        description: >
+          A empresa nao veio de associacao direta com a atividade, e sim do
+          negocio associado.
+
+      - name: is_qualification_activity
+        data_type: boolean
+        description: >
+          Atividade com contato associado mas sem negocio — tipicamente
+          contato de qualificacao antes da abertura da oportunidade.
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"

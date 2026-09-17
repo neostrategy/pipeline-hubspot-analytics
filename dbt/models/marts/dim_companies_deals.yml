@@ -1,0 +1,205 @@
+version: 2
+
+models:
+  - name: dim_companies
+    description: >
+      Um registro por empresa do HubSpot, com o estado atual de cadastro,
+      classificacao e porte.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: company_id
+        data_type: bigint
+        description: "Identificador da empresa no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: company_name
+        data_type: varchar
+        description: "Razao social ou nome fantasia cadastrado"
+
+      - name: cnpj
+        data_type: varchar
+        description: >
+          CNPJ como cadastrado no CRM, sem normalizacao. Pode vir com ou sem
+          mascara — nao usar como chave de join sem tratar.
+
+      - name: domain
+        data_type: varchar
+        description: "Dominio principal da empresa"
+
+      - name: website_url
+        data_type: varchar
+        description: "Site da empresa"
+
+      - name: linkedin_url
+        data_type: varchar
+        description: "Pagina da empresa no LinkedIn"
+
+      - name: phone
+        data_type: varchar
+        description: "Telefone principal"
+
+      - name: description
+        data_type: varchar
+        description: "Descricao livre da empresa"
+
+      - name: company_type
+        data_type: varchar
+        description: "Tipo da empresa no CRM (cliente, parceiro, prospect...)"
+
+      - name: industry
+        data_type: varchar
+        description: "Setor de atuacao"
+
+      - name: lifecycle_stage
+        data_type: varchar
+        description: "Estagio da empresa no ciclo de vida do CRM"
+
+      - name: lead_status
+        data_type: varchar
+        description: "Status do lead definido pela operacao"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor proprietario da empresa no HubSpot"
+
+      - name: employees_qty
+        data_type: integer
+        description: "Numero de funcionarios informado"
+
+      - name: annual_revenue_amount
+        data_type: decimal(18,2)
+        description: "Faturamento anual informado"
+
+      - name: city
+        data_type: varchar
+        description: "Cidade"
+
+      - name: state
+        data_type: varchar
+        description: "Estado"
+
+      - name: country
+        data_type: varchar
+        description: "Pais"
+
+      - name: postal_code
+        data_type: varchar
+        description: "CEP"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao da empresa no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
+
+  - name: dim_deals
+    description: >
+      Um registro por negocio do HubSpot, com o estado atual de funil e
+      valores. O historico de mudanca de etapa vive no snapshot de
+      deal_stage.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: deal_id
+        data_type: bigint
+        description: "Identificador do negocio no HubSpot"
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+
+      - name: deal_name
+        data_type: varchar
+        description: "Nome do negocio"
+
+      - name: description
+        data_type: varchar
+        description: "Descricao livre do negocio"
+
+      - name: owner_id
+        data_type: bigint
+        description: "Consultor proprietario do negocio no HubSpot"
+
+      - name: pipeline_id
+        data_type: varchar
+        description: "Funil ao qual o negocio pertence"
+
+      - name: deal_stage
+        data_type: varchar
+        description: >
+          Etapa atual do negocio. Sobrescrita a cada avanco — use o snapshot
+          de deal_stage para o historico.
+
+      - name: deal_type
+        data_type: varchar
+        description: "Tipo do negocio (novo, renovacao...)"
+
+      - name: forecast_category
+        data_type: varchar
+        description: "Categoria de previsao atribuida pelo CRM"
+
+      - name: stage_probability_ratio
+        data_type: decimal(9,6)
+        description: "Probabilidade de fechamento da etapa, como fracao de 0 a 1"
+
+      - name: next_step
+        data_type: varchar
+        description: "Proximo passo registrado pelo consultor"
+
+      - name: deal_amount
+        data_type: decimal(18,2)
+        description: "Valor do negocio"
+
+      - name: closed_amount
+        data_type: decimal(18,2)
+        description: "Valor efetivamente fechado"
+
+      - name: projected_amount
+        data_type: decimal(18,2)
+        description: "Valor projetado pelo CRM"
+
+      - name: product_category_interest
+        data_type: varchar
+        description: "Categoria de produto de interesse do negocio"
+
+      - name: no_bo
+        data_type: varchar
+        description: "Campo de negocio da operacao, preservado como na origem"
+
+      - name: direcionado
+        data_type: varchar
+        description: "Campo de negocio da operacao, preservado como na origem"
+
+      - name: qualificado_para_qual_funil
+        data_type: varchar
+        description: "Funil para o qual o negocio foi qualificado"
+
+      - name: closed_at
+        data_type: timestamp(6)
+        description: "Data de fechamento do negocio, em UTC"
+
+      - name: created_at
+        data_type: timestamp(6)
+        description: "Criacao do negocio no HubSpot, em UTC"
+
+      - name: updated_at
+        data_type: timestamp(6)
+        description: "Ultima modificacao no HubSpot, em UTC"
+
+      - name: _loaded_at
+        data_type: timestamp(6)
+        description: "Momento da carga no lake, em UTC"
