@@ -9,7 +9,7 @@ pull:
   - prefect.deployments.steps.git_clone:
       repository: https://github.com/neostrategy/pipeline-hubspot-analytics.git
       branch: master
-      access_token: "{{ prefect.blocks.secret.github-token }}"
+      credentials: "{{ prefect.blocks.github-credentials.github-token }}"
 
 deployments:
 
