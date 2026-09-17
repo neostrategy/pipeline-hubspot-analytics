@@ -1,6 +1,7 @@
-prefect>=2.19
+prefect>=3.0
+prefect-aws>=0.5
 boto3>=1.34
-duckdb>=1.3
-dbt-core>=1.8
-dbt-duckdb>=1.9
+dbt-core==1.12.0
+dbt-athena==1.11.1
+dbt-utils
 python-dotenv>=1.0
