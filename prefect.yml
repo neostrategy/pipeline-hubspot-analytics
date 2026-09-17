@@ -1,0 +1,62 @@
+name: pipeline-hubspot-analytics
+prefect-version: 3.0.0
+
+build: null
+push: null
+
+# O compute gerenciado nao tem o repositorio: clona a cada execucao.
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/neostrategy/pipeline-hubspot-analytics.git
+      branch: main
+      access_token: "{{ prefect.blocks.secret.github-token }}"
+
+deployments:
+
+  - name: diario
+    entrypoint: flows/pipeline_hubspot_analytics.py:pipeline_hubspot_analytics
+    description: >
+      Carga incremental do HubSpot: extrai via Lambda, grava o raw no S3 e
+      roda o dbt build contra o Athena. O watermark so avanca se o dbt
+      concluir.
+    tags: [hubspot, samsung]
+    parameters:
+      objetos: null
+      rodar_transformacao: true
+    work_pool:
+      name: neotass-managed
+      job_variables:
+        pip_packages:
+          - prefect-aws
+          - boto3
+          - python-dotenv
+          - dbt-core==1.12.0
+          - dbt-athena==1.11.1
+          - dbt-utils
+        env:
+          AWS_DEFAULT_REGION: sa-east-1
+          DBT_TARGET: prod
+          DBT_PROJECT_DIR: dbt
+    schedules:
+      - cron: "0 6 * * *"
+        timezone: America/Sao_Paulo
+        active: true
+
+  - name: ingestao-sem-dbt
+    entrypoint: flows/pipeline_hubspot_analytics.py:pipeline_hubspot_analytics
+    description: >
+      So a ingestao, sem transformacao. Disparo manual, para depurar a
+      escrita no S3 sem depender do dbt.
+    tags: [hubspot, manual]
+    parameters:
+      objetos: null
+      rodar_transformacao: false
+    work_pool:
+      name: neotass-managed
+      job_variables:
+        pip_packages:
+          - prefect-aws
+          - boto3
+          - python-dotenv
+        env:
+          AWS_DEFAULT_REGION: sa-east-1
